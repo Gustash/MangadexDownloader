@@ -15,6 +15,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import AnimatedTabBar from '@gorhom/animated-tabbar';
 import {AppearanceProvider, useColorScheme} from 'react-native-appearance';
+import {createCollapsibleStack} from 'react-navigation-collapsible';
 
 import Library from './src/pages/Library';
 import Settings from './src/pages/Settings';
@@ -63,13 +64,18 @@ const LibraryNavigator: () => React$Node = () => {
         component={Library}
         options={{headerShown: false, headerTitle: 'Library'}}
       />
-      <LibraryStack.Screen
-        name="DownloadManga"
-        component={DownloadManga}
-        options={{
-          headerTitle: 'Download',
-        }}
-      />
+      {createCollapsibleStack(
+        <LibraryStack.Screen
+          name="DownloadManga"
+          component={DownloadManga}
+          options={{
+            headerTitle: 'Download',
+            headerStyle: {
+              height: 200,
+            },
+          }}
+        />,
+      )}
     </LibraryStack.Navigator>
   );
 };

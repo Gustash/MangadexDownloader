@@ -7,6 +7,6 @@ import {StyleSheet} from 'react-native';
 
 export default StyleSheet.create({
   flatListContentContainer: {
-    paddingVertical: 8,
+    paddingVertical: 208,
   },
 });

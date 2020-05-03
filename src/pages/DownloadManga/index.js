@@ -4,12 +4,13 @@
  */
 
 import React, {useEffect, useMemo} from 'react';
-import {View, FlatList} from 'react-native';
+import {View, Animated} from 'react-native';
 import {NavigationProp, RouteProp} from '@react-navigation/native';
 import {useQuery} from 'react-query';
+import {useCollapsibleStack} from 'react-navigation-collapsible';
+
 import Text from '../../components/Text';
 import commonStyles from '../../styles/common';
-import {useColorScheme} from 'react-native-appearance';
 import styles from './styles';
 import ChapterCard from '../../components/ChapterCard';
 
@@ -29,7 +30,7 @@ const fetchMangaDetails = async (_, id: string) => {
 };
 
 const DownloadManga: (props: Props) => React$Node = ({route, navigation}) => {
-  const scheme = useColorScheme();
+  const {onScroll, scrollIndicatorInsetTop} = useCollapsibleStack();
 
   const {id} = route?.params ?? {id: null};
   const {status, error, data} = useQuery(
@@ -94,12 +95,14 @@ const DownloadManga: (props: Props) => React$Node = ({route, navigation}) => {
 
   return (
     <View style={commonStyles.container}>
-      <FlatList
+      <Animated.FlatList
         data={chapters}
-        contentContainerStyle={styles.flatListContentContainer}
+        contentContainerStyle={[styles.flatListContentContainer]}
         renderItem={({item}) => {
           return <ChapterCard {...item} />;
         }}
+        onScroll={onScroll}
+        scrollIndicatorInsets={{top: scrollIndicatorInsetTop}}
       />
     </View>
   );
