@@ -18,7 +18,7 @@ export default StyleSheet.create({
 
     elevation: 4,
   },
-  container: {
+  header: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 20,
@@ -36,7 +36,6 @@ export default StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 16,
-    lineHeight: 20,
   },
   titleWithCover: {
     color: '#fff',
@@ -48,10 +47,10 @@ export default StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     height: 200,
   },
-  coverLoadingLight: {
+  coverBackgroundLight: {
     backgroundColor: '#fff',
   },
-  coverLoadingDark: {
+  coverBackgroundDark: {
     backgroundColor: Colors.darkGray,
   },
 });

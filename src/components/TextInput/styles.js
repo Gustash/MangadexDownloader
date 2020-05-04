@@ -26,5 +26,9 @@ export default StyleSheet.create({
   textInput: {
     flex: 1,
     padding: 16,
+    color: '#000',
+  },
+  textInputDark: {
+    color: '#fff',
   },
 });

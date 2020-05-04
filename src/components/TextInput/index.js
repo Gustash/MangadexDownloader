@@ -88,7 +88,12 @@ const TextInput: (props: Props) => React$Node = ({
         </Animated.View>
       )}
       <AnimatedTextInput
-        style={[styles.textInput, textInputAnimationStyle, style]}
+        style={[
+          styles.textInput,
+          scheme === 'dark' && styles.textInputDark,
+          textInputAnimationStyle,
+          style,
+        ]}
         placeholderTextColor={Colors.mangadexBranding}
         onPress={onPress}
         onFocus={_onFocus}
