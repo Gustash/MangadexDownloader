@@ -2,13 +2,13 @@
  * @format
  * @flow strict-local
  */
-import React, {useState, useCallback, useRef, useEffect} from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Animated,
   TouchableOpacity,
   ImageBackground,
-  Platform,
+  View,
 } from 'react-native';
 import {useCollapsibleStack} from 'react-navigation-collapsible';
 import {useColorScheme} from 'react-native-appearance';
@@ -38,40 +38,20 @@ export type HeaderProps = {
 const AnimatedImageBackground = Animated.createAnimatedComponent(
   ImageBackground,
 );
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const Header: (props: HeaderProps) => React$Node = ({
   title,
   leftIcon,
   onLeftIconPress,
   insets = {bottom: 0, left: 0, right: 0, top: 0},
-  style,
+  style: {transform, ...style} = {},
   cover,
 }) => {
   const {progress} = useCollapsibleStack();
-  const [coverLoaded, setCoverLoaded] = useState(false);
 
   const topInset = insets.top + 20;
 
-  const coverAnimation = useRef(new Animated.Value(0)).current;
   const scheme = useColorScheme();
-
-  const _onCoverLoadEnd = useCallback(() => {
-    console.log('ended');
-    setCoverLoaded(true);
-  }, []);
-  const _onCoverLoadStart = useCallback(() => {
-    console.log('started');
-    setCoverLoaded(false);
-  }, []);
-
-  useEffect(() => {
-    Animated.timing(coverAnimation, {
-      toValue: coverLoaded ? 1 : 0,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
-  }, [coverAnimation, coverLoaded]);
 
   return (
     <Animated.View
@@ -85,67 +65,41 @@ const Header: (props: HeaderProps) => React$Node = ({
                 extrapolate: 'clamp',
               }),
             },
+            ...(transform ?? []),
           ],
         },
         style,
       ]}>
       {cover && (
-        <>
-          <AnimatedImageBackground
-            source={cover}
-            style={[
-              styles.cover,
-              styles.shadow,
-              !coverLoaded && scheme === 'dark' && styles.coverBackgroundDark,
-              !coverLoaded && scheme !== 'dark' && styles.coverBackgroundLight,
-              style,
-            ]}
-            onLoadStart={_onCoverLoadStart}
-            onLoadEnd={_onCoverLoadEnd}>
-            <AnimatedLinearGradient
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            scheme === 'dark'
+              ? styles.coverBackgroundDark
+              : styles.coverBackgroundLight,
+            styles.shadow,
+          ]}>
+          <AnimatedImageBackground source={cover} style={styles.cover}>
+            <LinearGradient
               colors={[
                 'transparent',
                 scheme === 'dark' ? Colors.darkGray : '#fff',
               ]}
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  opacity: progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [1, 0],
-                  }),
-                },
-              ]}
+              style={StyleSheet.absoluteFill}
             />
-            {Platform.OS === 'ios' && (
-              <Animated.View
-                style={[
-                  StyleSheet.absoluteFill,
-                  scheme === 'dark'
-                    ? styles.coverBackgroundDark
-                    : styles.coverBackgroundLight,
-                  {
-                    opacity: progress,
-                  },
-                ]}
-              />
-            )}
           </AnimatedImageBackground>
-          {Platform.OS === 'android' && (
-            <Animated.View
-              style={[
-                StyleSheet.absoluteFill,
-                styles.shadow,
-                scheme === 'dark'
-                  ? styles.coverBackgroundDark
-                  : styles.coverBackgroundLight,
-                {
-                  opacity: progress,
-                },
-              ]}
-            />
-          )}
-        </>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              scheme === 'dark'
+                ? styles.coverBackgroundDark
+                : styles.coverBackgroundLight,
+              {
+                opacity: progress,
+              },
+            ]}
+          />
+        </View>
       )}
       <Animated.View
         style={[
@@ -167,7 +121,7 @@ const Header: (props: HeaderProps) => React$Node = ({
             />
           </TouchableOpacity>
         )}
-        <Text style={[styles.title]} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
       </Animated.View>

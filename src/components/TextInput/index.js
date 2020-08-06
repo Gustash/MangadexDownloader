@@ -6,10 +6,11 @@ import * as React from 'react';
 import {TextInput as RNTextInput, TouchableOpacity} from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Animated, {Easing} from 'react-native-reanimated';
+import {useColorScheme} from 'react-native-appearance';
+import type {ViewStyleProp} from 'react-native/Libraries/StyleSheet/StyleSheet';
 
 import styles from './styles';
 import Colors from '../../styles/colors';
-import {useColorScheme} from 'react-native-appearance';
 
 const {useState, useRef, useEffect, useCallback} = React;
 
@@ -18,6 +19,7 @@ const AnimatedTextInput = Animated.createAnimatedComponent(RNTextInput);
 type Props = React.Config<AnimatedTextInput> & {
   icon?: string,
   onPress?: () => void,
+  containerStyle?: ViewStyleProp,
 };
 
 const TextInput: (props: Props) => React$Node = ({
@@ -26,6 +28,7 @@ const TextInput: (props: Props) => React$Node = ({
   onPress,
   onFocus,
   onBlur,
+  containerStyle,
   ...props
 }) => {
   const iconAnimation: Animated.Value = useRef(new Animated.Value(1)).current;
@@ -79,10 +82,16 @@ const TextInput: (props: Props) => React$Node = ({
 
   return (
     <TouchableOpacity
-      style={[styles.container, scheme === 'dark' && styles.containerDark]}
-      onPress={onPress}>
+      style={[
+        styles.container,
+        scheme === 'dark' && styles.containerDark,
+        containerStyle,
+      ]}
+      onPress={onPress}
+      disabled={!onPress}>
       {icon?.length > 0 && (
         <Animated.View
+          touchPointers="none"
           style={[styles.iconContainer, iconContainerAnimationStyle]}>
           <FontAwesome5 size={16} color={Colors.mangadexBranding} name={icon} />
         </Animated.View>

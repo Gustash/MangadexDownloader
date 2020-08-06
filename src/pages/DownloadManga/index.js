@@ -3,19 +3,17 @@
  * @flow strict-local
  */
 
-import React, {useEffect, useMemo, useContext} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {View, Animated, TouchableOpacity} from 'react-native';
 import {NavigationProp, RouteProp} from '@react-navigation/native';
 import {useQuery} from 'react-query';
 import {useCollapsibleStack} from 'react-navigation-collapsible';
+import unescape from 'lodash.unescape';
 
 import Text from '../../components/Text';
-import commonStyles from '../../styles/common';
 import styles from './styles';
 import ChapterCard from '../../components/ChapterCard';
-import Colors from '../../styles/colors';
-import LibraryContext from '../../context/LibraryContext';
-import {addManga} from '../../actions/library';
+import {useRealm} from '../../context/RealmContext';
 
 type RouteParams = {
   id: string,
@@ -33,8 +31,8 @@ const fetchMangaDetails = async (_, id: string) => {
 };
 
 const DownloadManga: (props: Props) => React$Node = ({route, navigation}) => {
-  const [, dispatch] = useContext(LibraryContext);
-  const {onScroll, scrollIndicatorInsetTop} = useCollapsibleStack();
+  const realm = useRealm();
+  const {onScroll} = useCollapsibleStack();
 
   const {id} = route?.params ?? {id: null};
   const {status, error, data} = useQuery(
@@ -42,20 +40,17 @@ const DownloadManga: (props: Props) => React$Node = ({route, navigation}) => {
     fetchMangaDetails,
   );
 
-  useEffect(() => {
-    if (status === 'success') {
-      dispatch(addManga({id, ...data.manga}));
+  const languages = useMemo(() => {
+    if (!data?.chapter) {
+      return [];
     }
-  }, [status, data, dispatch]);
 
-  useEffect(() => {
-    if (status === 'success') {
-      navigation.setOptions({
-        headerTitle: data.manga.title,
-        headerCover: `https://mangadex.org/${data.manga.cover_url}`,
-      });
-    }
-  }, [status, navigation, data]);
+    return [
+      ...new Set(
+        Object.keys(data.chapter).map((key) => data.chapter[key].lang_code),
+      ),
+    ];
+  }, [data]);
 
   const chapters = useMemo(() => {
     if (!data?.chapter) {
@@ -73,17 +68,48 @@ const DownloadManga: (props: Props) => React$Node = ({route, navigation}) => {
           ({chapter}) => chapter === currChapter.chapter,
         );
 
-        if (accChapter?.timestamp >= currChapter.timestamp) {
+        const currChapterUnescaped = {
+          ...currChapter,
+          title: unescape(currChapter.title),
+          group_name: unescape(currChapter.group_name),
+        };
+
+        if (accChapter) {
           return [
             ...acc.filter(({chapter}) => chapter !== currChapter.chapter),
-            currChapter,
+            currChapterUnescaped,
           ];
         }
 
-        return [...acc, currChapter];
+        return [...acc, currChapterUnescaped];
       }, [])
       .sort((a, b) => b.chapter - a.chapter);
   }, [data]);
+
+  useEffect(() => {
+    if (status === 'success') {
+      navigation.setOptions({
+        headerTitle: unescape(data.manga.title),
+        headerCover: `https://mangadex.org/${data.manga.cover_url}`,
+      });
+    }
+  }, [status, navigation, data]);
+
+  useEffect(() => {
+    if (status === 'success') {
+      realm.write(() => {
+        realm.create(
+          'Manga',
+          {
+            id,
+            title: unescape(data.manga.title),
+            cover_url: data.manga.cover_url,
+          },
+          'modified',
+        );
+      });
+    }
+  }, [id, status, data, realm]);
 
   if (!id) {
     return null;
@@ -97,31 +123,26 @@ const DownloadManga: (props: Props) => React$Node = ({route, navigation}) => {
     return <Text>Error: {error.toString()}</Text>;
   }
 
+  console.log(languages);
+
   return (
-    <View style={commonStyles.container}>
-      <Animated.FlatList
-        ListHeaderComponent={
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'flex-end',
-              marginHorizontal: 20,
-              marginVertical: 16,
-            }}>
-            <TouchableOpacity>
-              <Text style={{color: Colors.mangadexBranding}}>Download All</Text>
-            </TouchableOpacity>
-          </View>
-        }
-        data={chapters}
-        contentContainerStyle={[styles.flatListContentContainer]}
-        renderItem={({item}) => {
-          return <ChapterCard {...item} />;
-        }}
-        onScroll={onScroll}
-        scrollIndicatorInsets={{top: scrollIndicatorInsetTop}}
-      />
-    </View>
+    <Animated.FlatList
+      ListHeaderComponent={
+        <View style={styles.downloadAllRow}>
+          <TouchableOpacity>
+            <Text style={styles.downloadAllText}>Download All</Text>
+          </TouchableOpacity>
+        </View>
+      }
+      data={chapters}
+      contentContainerStyle={[styles.flatListContentContainer]}
+      renderItem={({item}) => {
+        return <ChapterCard {...item} id={item.key} />;
+      }}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      scrollIndicatorInsets={{top: 160}}
+    />
   );
 };
 

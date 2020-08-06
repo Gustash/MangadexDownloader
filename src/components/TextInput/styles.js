@@ -12,6 +12,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     backgroundColor: '#fff',
+    overflow: 'hidden',
   },
   containerDark: {
     backgroundColor: Colors.darkGray,

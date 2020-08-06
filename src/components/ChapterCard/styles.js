@@ -39,6 +39,9 @@ export default StyleSheet.create({
   smallText: {
     fontSize: 12,
   },
+  centerText: {
+    textAlign: 'center',
+  },
   download: {
     marginLeft: 8,
   },
